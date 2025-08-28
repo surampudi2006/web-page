@@ -1,0 +1,40 @@
+script.js
+javascript
+Copy code
+const prompts = [
+  "Design a gadget that helps people in the morning rush.",
+  "Write a short story about a world with floating cities.",
+  "Invent a new holiday and describe how people celebrate it.",
+  "Imagine a pet that doesn’t exist yet. What’s it like?",
+  "Create a superhero whose power is oddly specific.",
+  "Describe a city 200 years in the future.",
+  "Think of a social app that encourages kindness."
+];
+
+const promptBox = document.getElementById("prompt");
+const newIdeaBtn = document.getElementById("newIdeaBtn");
+const timerDisplay = document.getElementById("timer");
+
+let countdown;
+let timeLeft = 60;
+
+function startTimer() {
+  clearInterval(countdown);
+  timeLeft = 60;
+  timerDisplay.textContent = `${timeLeft}s`;
+  
+  countdown = setInterval(() => {
+    timeLeft--;
+    timerDisplay.textContent = ` ${timeLeft}s`;
+    if (timeLeft <= 0) {
+      clearInterval(countdown);
+      timerDisplay.textContent = " Time's up!";
+    }
+  }, 1000);
+}
+
+newIdeaBtn.addEventListener("click", () => {
+  const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
+  promptBox.textContent = randomPrompt;
+  startTimer();
+});
