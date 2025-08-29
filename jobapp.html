@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<head>
+  <title>Job world — Find Your Next Role</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg:#0f172a; --card:#111827; --muted:#94a3b8; --text:#e5e7eb; --accent:#22d3ee; --accent-2:#a78bfa;
+      --chip:#1f2937; --ok:#10b981; --warn:#f59e0b; --err:#ef4444;
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;
+      background: radial-gradient(1200px 600px at 10% -10%, #1e293b 0, transparent 60%),
+                  radial-gradient(1000px 700px at 110% 10%, #1e293b 0, transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    header{
+      position:sticky; top:0; z-index:5;
+      background:linear-gradient(180deg, rgba(15,23,42,.95), rgba(15,23,42,.75));
+      backdrop-filter: blur(6px);
+      border-bottom:1px solid #1f2937;
+    }
+    .wrap{max-width:1100px; margin:0 auto; padding:16px}
+    .title{
+      display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:.2px;
+      font-size: clamp(20px, 2vw, 28px);
+    }
+    .title .logo{
+      width:36px; height:36px; border-radius:12px;
+      display:grid; place-items:center; font-weight:900;
+      background:linear-gradient(135deg,var(--accent),var(--accent-2));
+      color:#0b1020;
+      box-shadow:0 6px 20px rgba(137, 207, 240,.25);
+    }
+    .controls{
+      display:grid; grid-template-columns: 1.2fr .9fr .9fr .9fr auto; gap:10px; margin-top:12px;
+    }
+    .controls input,.controls select,.controls button{
+      width:100%; padding:12px 14px; border-radius:12px; border:1px solid #243042;
+      background:#0b1220; color:var(--text); outline:none;
+    }
+    .controls input::placeholder{color:#6b7280}
+    .controls button{
+      background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:#0b1020; font-weight:700; cursor:pointer;
+      transition:.15s transform ease;
+    }
+    .controls button:active{transform:translateY(1px)}
+    .tabs{
+      margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;
+    }
+    .tab{
+      padding:8px 12px; border-radius:999px; border:1px solid #243042; background:#0b1220; color:#cbd5e1; cursor:pointer;
+    }
+    .tab.active{border-color:transparent; background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:#0b1020; font-weight:800}
+    main{padding:20px 16px 80px}
+    .grid{
+      display:grid; gap:14px;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    }
+    .card{
+      background:linear-gradient(180deg,#0b1220,#0a1322);
+      border:1px solid #1f2937; border-radius: var(--radius);
+      padding:16px; box-shadow: 0 8px 30px rgba(0,0,0,.25);
+      display:flex; flex-direction:column; gap:10px;
+    }
+    .row{display:flex; gap:10px; align-items:center; justify-content:space-between}
+    .company{display:flex; gap:10px; align-items:center}
+    .badge{
+      padding:6px 10px; border-radius:999px; background:var(--chip); color:#cbd5e1; font-size:12px; border:1px solid #253244;
+    }
+    .meta{display:flex; gap:6px; flex-wrap:wrap}
+    h3{margin:0; font-size:18px}
+    .desc{color:#b6c2cf; font-size:14px; line-height:1.5}
+    .cta{display:flex; gap:8px; margin-top:auto}
+    .btn{
+      padding:10px 12px; border-radius:12px; border:1px solid #253244; background:#0b1220; color:#e5e7eb; cursor:pointer;
+    }
+    .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:#0b1020; border:none; font-weight:800}
+    .btn.save.active{outline:2px solid var(--ok); border-color:transparent}
+    .empty{
+      text-align:center; color:#9aa7b4; padding:40px 10px; border:1px dashed #2a3649; border-radius:16px; background:#0b1220;
+    }
+
+    /* Modal */
+    dialog{
+      border:none; border-radius:18px; padding:0; width:min(560px, 92vw); color:var(--text);
+      background:#0b1220; box-shadow: 0 18px 80px rgba(0,0,0,.5); overflow:hidden;
+    }
+    dialog::backdrop{background:rgba(0,0,0,.55)}
+    .modal-head{display:flex; justify-content:space-between; align-items:center; padding:16px; border-bottom:1px solid #1f2937}
+    .modal-body{padding:16px; display:grid; gap:10px}
+    .modal-body input, .modal-body textarea{
+      width:100%; padding:12px; border-radius:12px; border:1px solid #243042; background:#07101e; color:var(--text);
+    }
+    .modal-foot{display:flex; justify-content:flex-end; gap:8px; padding:14px 16px; border-top:1px solid #1f2937; background:#0b1220}
+    small.help{color:#94a3b8}
+
+    footer{
+      position:fixed; bottom:10px; left:0; right:0;
+      display:flex; justify-content:center; pointer-events:none;
+    }
+    .toast{
+      pointer-events:auto; padding:10px 14px; border-radius:999px; background:#0b1220; border:1px solid #243042; color:#d1d5db;
+      box-shadow:0 10px 30px rgba(0,0,0,.35);
+      animation: pop .18s ease-in-out;
+    }
+    @keyframes pop{from{transform:translateY(6px); opacity:.0} to{transform:translateY(0); opacity:1}}
+    @media (max-width:640px){
+      .controls{grid-template-columns: 1fr 1fr 1fr 1fr; gap:8px}
+      .controls .full{grid-column: 1 / -1}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="title">
+        <div class="logo">JB</div>
+        JobBoard <span style="font-weight:400;color:var(--muted)">Lite</span>
+      </div>
+
+      <div class="controls">
+        <input id="q" type="search" placeholder="Search jobs, skills, company…" class="full" />
+        <select id="loc">
+          <option value="">All locations</option>
+          <option>Remote</option><option>Hyderabad</option><option>Bengaluru</option><option>Delhi</option>
+        </select>
+        <select id="type">
+          <option value="">All types</option>
+          <option>Full-time</option><option>Part-time</option><option>Internship</option><option>Contract</option>
+        </select>
+        <select id="sort">
+          <option value="new">Sort: Newest</option>
+          <option value="old">Sort: Oldest</option>
+          <option value="a2z">Sort: A→Z</option>
+        </select>
+        <button id="addJobBtn" title="Add a custom job">+ Add Job</button>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="all">All Jobs</button>
+        <button class="tab" data-tab="saved">Saved</button>
+        <button class="tab" data-tab="applied">Applied</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div id="list" class="grid" aria-live="polite"></div>
+  </main>
+
+  <!-- Apply Modal -->
+  <dialog id="applyModal" aria-label="Apply for job">
+    <form method="dialog" id="applyForm">
+      <div class="modal-head">
+        <div>
+          <strong id="applyJobTitle">Apply</strong>
+          <div class="meta" style="margin-top:4px"><span class="badge" id="applyJobMeta"></span></div>
+        </div>
+        <button class="btn" value="cancel" type="reset" onclick="document.getElementById('applyModal').close()">✕</button>
+      </div>
+      <div class="modal-body">
+        <label>Full Name
+          <input required id="name" placeholder="Your name" />
+        </label>
+        <label>Email
+          <input required type="email" id="email" placeholder="you@example.com" />
+        </label>
+        <label>Cover Letter
+          <textarea id="cover" rows="5" placeholder="Short note..."></textarea>
+        </label>
+        <small class="help">Demo only — your data is stored locally in your browser (localStorage).</small>
+      </div>
+      <div class="modal-foot">
+        <button class="btn" value="cancel" type="reset" onclick="document.getElementById('applyModal').close()">Cancel</button>
+        <button class="btn primary" value="default" id="applySubmit">Submit Application</button>
+      </div>
+    </form>
+  </dialog>
+
+  <footer id="toastWrap"></footer>
+
+  <script>
+    // -------- Demo Data --------
+    const seedJobs = [
+      { id: cryptoRand(), title:"Frontend Developer", company:"SkyLabs", location:"Hyderabad", type:"Full-time",
+        tags:["React","TypeScript","CSS"], posted: daysAgo(1),
+        desc:"Build delightful UI for our analytics dashboard. Collaborate with design & backend teams." },
+      { id: cryptoRand(), title:"Data Analyst Intern", company:"InsightIQ", location:"Bengaluru", type:"Internship",
+        tags:["SQL","Python","Excel"], posted: daysAgo(3),
+        desc:"Assist with data cleaning, dashboarding and insights for our growth team." },
+      { id: cryptoRand(), title:"Product Designer", company:"NovaSoft", location:"Remote", type:"Contract",
+        tags:["Figma","Design Systems","Prototyping"], posted: daysAgo(0),
+        desc:"Shape user journeys and craft polished interfaces for mobile and web." },
+      { id: cryptoRand(), title:"Backend Engineer", company:"ByteForge", location:"Delhi", type:"Full-time",
+        tags:["Node.js","PostgreSQL","APIs"], posted: daysAgo(5),
+        desc:"Design scalable services, write clean APIs, and own performance." }
+    ];
+
+    // -------- State --------
+    const state = {
+      jobs: load("jobs", seedJobs),
+      saved: load("saved", []),        // array of job ids
+      applied: load("applied", []),    // array of {id, name, email, cover, at}
+      tab: "all",
+      q: "", loc:"", type:"", sort:"new",
+      draftApplyJobId: null
+    };
+
+    // -------- Utilities --------
+    function $(sel, root=document){ return root.querySelector(sel) }
+    function $all(sel, root=document){ return Array.from(root.querySelectorAll(sel)) }
+    function save(key, val){ localStorage.setItem(key, JSON.stringify(val)) }
+    function load(key, fallback){ try{ return JSON.parse(localStorage.getItem(key)) ?? fallback }catch{ return fallback } }
+    function daysAgo(n){ const d=new Date(); d.setDate(d.getDate()-n); return d.toISOString() }
+    function timeAgo(iso){
+      const s = Math.floor((Date.now() - new Date(iso).getTime())/1000);
+      const d = Math.floor(s/86400), h = Math.floor((s%86400)/3600);
+      if(d>0) return d+"d ago"; if(h>0) return h+"h ago"; return "Today";
+    }
+    function cryptoRand(){ return (crypto.getRandomValues(new Uint32Array(2))[0].toString(36)+Date.now().toString(36)).slice(0,12) }
+    function toast(msg){ const t=document.createElement("div"); t.className="toast"; t.textContent=msg; $("#toastWrap").appendChild(t); setTimeout(()=>t.remove(), 2200) }
+
+    // -------- Rendering --------
+    function render(){
+      const list = $("#list");
+      const jobsToShow = getVisibleJobs();
+      list.innerHTML = "";
+
+      if(jobsToShow.length===0){
+        const e = document.createElement("div");
+        e.className="empty";
+        e.innerHTML = state.tab==="applied"
+          ? "No applications yet. Apply to a job to see it here."
+          : state.tab==="saved"
+            ? "You haven't saved any jobs. Click “Save”."
+            : "No jobs match your filters. Try clearing search or filters.";
+        list.appendChild(e);
+        return;
+      }
+
+      jobsToShow.forEach(job=>{
+        list.appendChild(jobCard(job));
+      });
+    }
+
+    function jobCard(job){
+      const saved = state.saved.includes(job.id);
+      const applied = state.applied.some(a=>a.id===job.id);
+
+      const card = document.createElement("article");
+      card.className="card";
+      card.innerHTML = `
+        <div class="row">
+          <div class="company">
+            <div class="logo" aria-hidden="true" style="
+              width:42px;height:42px;border-radius:12px;
+              background:linear-gradient(135deg,var(--accent),var(--accent-2));
+              display:grid;place-items:center;color:#0b1020;font-weight:900;">${job.company[0]}</div>
+            <div>
+              <h3>${escapeHTML(job.title)}</h3>
+              <div class="meta">
+                <span class="badge">${escapeHTML(job.company)}</span>
+                <span class="badge">${escapeHTML(job.location)}</span>
+                <span class="badge">${escapeHTML(job.type)}</span>
+                <span class="badge" title="${new Date(job.posted).toLocaleString()}">Posted ${timeAgo(job.posted)}</span>
+              </div>
+            </div>
+          </div>
+          <div class="meta">
+            ${job.tags.map(t=>`<span class="badge">#${escapeHTML(t)}</span>`).join("")}
+          </div>
+        </div>
+        <p class="desc">${escapeHTML(job.desc)}</p>
+        <div class="cta">
+          <button class="btn save ${saved?"active":""}" aria-pressed="${saved}" title="Save job">${saved?"★ Saved":"☆ Save"}</button>
+          <button class="btn primary apply">${applied?"Applied":"Apply"}</button>
+        </div>
+      `;
+
+      card.querySelector(".save").addEventListener("click", ()=>{
+        toggleSave(job.id);
+        render();
+        toast(state.saved.includes(job.id) ? "Saved job" : "Removed from saved");
+      });
+
+      card.querySelector(".apply").addEventListener("click", ()=>{
+        openApply(job);
+      });
+
+      return card;
+    }
+
+    function getVisibleJobs(){
+      let jobs = [...state.jobs];
+
+      // active tab filter
+      if(state.tab==="saved"){
+        jobs = jobs.filter(j=>state.saved.includes(j.id));
+      }else if(state.tab==="applied"){
+        jobs = jobs.filter(j=>state.applied.some(a=>a.id===j.id));
+      }
+
+      // search/filter
+      if(state.q.trim()){
+        const q = state.q.toLowerCase();
+        jobs = jobs.filter(j =>
+          j.title.toLowerCase().includes(q) ||
+          j.company.toLowerCase().includes(q) ||
+          j.location.toLowerCase().includes(q) ||
+          j.tags.join(" ").toLowerCase().includes(q) ||
+          j.desc.toLowerCase().includes(q)
+        );
+      }
+      if(state.loc) jobs = jobs.filter(j=> j.location===state.loc);
+      if(state.type) jobs = jobs.filter(j=> j.type===state.type);
+
+      // sort
+      if(state.sort==="new") jobs.sort((a,b)=> new Date(b.posted)-new Date(a.posted));
+      if(state.sort==="old") jobs.sort((a,b)=> new Date(a.posted)-new Date(b.posted));
+      if(state.sort==="a2z") jobs.sort((a,b)=> a.title.localeCompare(b.title));
+
+      return jobs;
+    }
+
+    // -------- Actions --------
+    function toggleSave(id){
+      const i = state.saved.indexOf(id);
+      if(i>-1) state.saved.splice(i,1); else state.saved.push(id);
+      save("saved", state.saved);
+    }
+
+    function openApply(job){
+      const modal = $("#applyModal");
+      $("#applyJobTitle").textContent = `Apply — ${job.title}`;
+      $("#applyJobMeta").textContent = `${job.company} • ${job.location} • ${job.type}`;
+      state.draftApplyJobId = job.id;
+      $("#applyForm").reset();
+      modal.showModal();
+    }
+
+    $("#applySubmit").addEventListener("click", (e)=>{
+      const id = state.draftApplyJobId;
+      const name = $("#name").value.trim();
+      const email = $("#email").value.trim();
+      const cover = $("#cover").value.trim();
+      if(!name || !email){ e.preventDefault(); toast("Please fill your name and a valid email."); return; }
+
+      // upsert application
+      const existing = state.applied.findIndex(a=>a.id===id);
+      const payload = { id, name, email, cover, at: new Date().toISOString() };
+      if(existing>-1) state.applied[existing] = payload; else state.applied.push(payload);
+      save("applied", state.applied);
+
+      $("#applyModal").close();
+      toast("Application submitted (stored locally).");
+      render();
+    });
+
+    // Add Job Flow (simple inline prompt-based add for demo)
+    $("#addJobBtn").addEventListener("click", ()=>{
+      const title = prompt("Job title?");
+      if(!title) return;
+      const company = prompt("Company name?") || "Unknown";
+      const location = prompt("Location? (e.g., Remote, Hyderabad)") || "Remote";
+      const type = prompt("Type? (Full-time, Part-time, Internship, Contract)") || "Full-time";
+      const tags = (prompt("Tags (comma separated)?") || "General").split(",").map(s=>s.trim()).filter(Boolean);
+      const desc = prompt("Short description?") || "No description provided.";
+
+      state.jobs.unshift({
+        id: cryptoRand(), title, company, location, type, tags, desc, posted: new Date().toISOString()
+      });
+      save("jobs", state.jobs);
+      toast("Job added");
+      render();
+    });
+
+    // Header filters
+    $("#q").addEventListener("input", e=>{ state.q=e.target.value; render(); });
+    $("#loc").addEventListener("change", e=>{ state.loc=e.target.value; render(); });
+    $("#type").addEventListener("change", e=>{ state.type=e.target.value; render(); });
+    $("#sort").addEventListener("change", e=>{ state.sort=e.target.value; render(); });
+
+    // Tabs
+    $all(".tab").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        $all(".tab").forEach(t=>t.classList.remove("active"));
+        btn.classList.add("active");
+        state.tab = btn.dataset.tab;
+        render();
+      });
+    });
+
+    // HTML escaping for safety
+    function escapeHTML(str){
+      return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+    }
+
+    // -------- Init --------
+    render();
+  </script>
+</body>
+</html>
