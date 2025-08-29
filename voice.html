@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voice Assistant</title>
+  <!-- Linking external CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1> My Voice Assistant</h1>
+  <button onclick="startRecognition()">Start Listening</button>
+  <div id="output">Your speech will appear here...</div>
+
+  <script>
+    function startRecognition() {
+      let output = document.getElementById("output");
+
+      // Check if browser supports SpeechRecognition
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+      if (!SpeechRecognition) {
+        output.innerHTML = " Your browser does not support Speech Recognition!";
+        return;
+      }
+
+      let recognition = new SpeechRecognition();
+      recognition.lang = "en-US";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.start();
+
+      recognition.onresult = function(event) {
+        let transcript = event.results[0][0].transcript;
+        output.innerHTML = "You said: " + transcript;
+
+        // Simple commands
+        if (transcript.toLowerCase().includes("hello")) {
+          speak("Hello! How can I help you today?");
+        } else if (transcript.toLowerCase().includes("time")) {
+          let now = new Date().toLocaleTimeString();
+          speak("The current time is " + now);
+        } else if (transcript.toLowerCase().includes("date")) {
+          let today = new Date().toDateString();
+          speak("Today's date is " + today);
+        } else {
+          speak("I heard you say " + transcript);
+        }
+      };
+
+      recognition.onerror = function(event) {
+        output.innerHTML = " Error occurred: " + event.error;
+      };
+    }
+
+    // Function for speech response
+    function speak(message) {
+      const synth = window.speechSynthesis;
+      let utterance = new SpeechSynthesisUtterance(message);
+      synth.speak(utterance);
+    }
+  </script>
+</body>
+</html>
